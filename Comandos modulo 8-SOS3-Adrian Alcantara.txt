@@ -1,0 +1,35 @@
+Comandos usados practica 1:  Instalacion y configuracion de Docker
+96  sudo docker pull nginx
+ 97  curl -fsSL https://get.docker.com -o get-docker.sh
+ 98  sudo sh get-docker.sh
+ 99  sudo systemctl enable --now docker
+100  sudo docker pull nginx
+101  sudo mkdir -p /home/website
+102  sudo nano /home/website/index.html
+103  sudo docker run -d --name mi_nginx -p 8888:80 -v /home/website:/usr/share/nginx/html nginx
+104  sudo firewall-cmd --add-port=8888/tcp
+105  sudo firewall-cmd --add-port=8888/tcp --permanent
+106  sudo systemctl enable --now firewalld
+107  sudo firewall-cmd --add-port=8888/tcp --permanent
+108  sudo firewall-cmd --reload
+============================================
+
+Comandos usados practica 2: Instalacion de Portainer 
+
+docker volume create portainer_data
+
+docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:sts
+============================================
+
+Comandos usados practica 3: IDespliegue de contenedor de Wordpress utilizando Docker-Compose 
+95  sudo dnf install docker-compose-pluggin -y
+   96  mkdir ~/practica_worpress
+   97  cd ~/practica_worpress
+   98  sudo nano docker-compose.yml
+   99  sudo docker compose up -d
+  100  sudo firewall-cmd --add-port=8080/tcp --permanent
+  101  sudo firewall-cmd --reload
+  102  sudo systemctl stop httpd
+  103  sudo systemctl disable httpd
+============================================
+
