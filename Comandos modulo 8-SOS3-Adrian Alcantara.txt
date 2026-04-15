@@ -1,34 +1,95 @@
 Comandos usados practica 1:  Instalacion y configuracion de Docker
-96  sudo docker pull nginx
- 97  curl -fsSL https://get.docker.com -o get-docker.sh
- 98  sudo sh get-docker.sh
- 99  sudo systemctl enable --now docker
-100  sudo docker pull nginx
-101  sudo mkdir -p /home/website
+# Descargar el script de instalación oficial de Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+
+# Ejecutar el script para instalar Docker en el sistema
+sudo sh get-docker.sh
+
+# Habilitar e iniciar el servicio de Docker para que arranque con el sistema
+sudo systemctl enable --now docker
+
+# Descargar la imagen de Nginx
+sudo docker pull nginx
+
+# Crear el directorio en el host para alojar los archivos de la página web
+sudo mkdir -p /home/website
+
+# Editar el archivo index.html de forma interactiva
 102  sudo nano /home/website/index.html
+<h1>Adrian Victoria</h1><h2>Matricula: 2025-2203</h2>
 103  sudo docker run -d --name mi_nginx -p 8888:80 -v /home/website:/usr/share/nginx/html nginx
-104  sudo firewall-cmd --add-port=8888/tcp
-105  sudo firewall-cmd --add-port=8888/tcp --permanent
-106  sudo systemctl enable --now firewalld
-107  sudo firewall-cmd --add-port=8888/tcp --permanent
-108  sudo firewall-cmd --reload
+# Levantar el contenedor de Nginx, conectando el puerto 8888 del host al 80 del contenedor
+# y montando la carpeta web local en la ruta por defecto de Nginx
+sudo docker run -d --name mi_nginx -p 8888:80 -v /home/website:/usr/share/nginx/html nginx
+
+# Asegurar que el servicio del firewall esté iniciado
+sudo systemctl enable --now firewalld
+
+# Abrir el puerto 8888 permanentemente y recargar el firewall (se eliminaron los comandos duplicados)
+sudo firewall-cmd --add-port=8888/tcp --permanent
+sudo firewall-cmd --reload
 ============================================
 
 Comandos usados practica 2: Instalacion de Portainer 
-
+# Crear un volumen en Docker para guardar la información persistente de Portainer
 docker volume create portainer_data
-
+# Ejecutar el contenedor de Portainer, mapeando los puertos administrativos (8000 y 9443) 
+# y enlazando el socket de Docker para que pueda gestionar otros contenedores
 docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:sts
 ============================================
 
 Comandos usados practica 3: IDespliegue de contenedor de Wordpress utilizando Docker-Compose 
-95  sudo dnf install docker-compose-pluggin -y
-   96  mkdir ~/practica_worpress
-   97  cd ~/practica_worpress
+# Instalar el complemento de Docker Compose (Corregido: "plugin" en vez de "pluggin")
+sudo dnf install docker-compose-plugin -y
+
+# Detener y deshabilitar Apache web server ANTES de iniciar contenedores 
+# para evitar que el puerto 80 del host esté ocupado
+sudo systemctl stop httpd
+sudo systemctl disable httpd
+
+# Crear la carpeta de trabajo del proyecto y acceder a ella (Corregido: "wordpress")
+mkdir ~/practica_wordpress
+cd ~/practica_wordpress
+
+# Crear y configurar el archivo YAML de forma interactiva
    98  sudo nano docker-compose.yml
-   99  sudo docker compose up -d
-  100  sudo firewall-cmd --add-port=8080/tcp --permanent
-  101  sudo firewall-cmd --reload
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    command: '--default-authentication-plugin=mysql_native_password'
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password_seguro
+      - MYSQL_DATABASE=wordpress
+      - MYSQL_USER=wordpress_user
+      - MYSQL_PASSWORD=wordpress_password
+
+  wordpress:
+    image: wordpress:latest
+    ports:
+      - "8088:80"
+    restart: always
+    environment:
+      - WORDPRESS_DB_HOST=db
+      - WORDPRESS_DB_USER=wordpress_user
+      - WORDPRESS_DB_PASSWORD=wordpress_password
+      - WORDPRESS_DB_NAME=wordpress
+    depends_on:
+      - db
+
+volumes:
+  db_data:
+   # Levantar todos los servicios declarados en el YAML en segundo plano
+sudo docker compose up -d
+
+# Permitir el tráfico hacia el puerto 8080 en el firewall y recargar
+sudo firewall-cmd --add-port=8080/tcp --permanent
+sudo firewall-cmd --reload
+#en caso de que haya otra pagina web activa
   102  sudo systemctl stop httpd
   103  sudo systemctl disable httpd
 ============================================
